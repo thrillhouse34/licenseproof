@@ -1,0 +1,9 @@
+{
+  "name": "fixture-resolve-08-conflict-matrix",
+  "version": "1.0.0",
+  "dependencies": {
+    "strong-copyleft-pkg": "^1.0.0",
+    "noncommercial-pkg": "^1.0.0",
+    "permissive-pkg": "^1.0.0"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "fixture-resolve-03-missing-license",
+  "version": "1.0.0",
+  "dependencies": { "mystery-pkg": "^1.0.0" }
+}

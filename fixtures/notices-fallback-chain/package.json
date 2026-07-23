@@ -1,0 +1,9 @@
+{
+  "name": "fixture-notices-fallback-chain",
+  "version": "1.0.0",
+  "dependencies": {
+    "mit-pkg": "^1.0.0",
+    "ondisk-only-pkg": "^1.0.0",
+    "unavailable-pkg": "^1.0.0"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "fixture-resolve-01-dual-license",
+  "version": "1.0.0",
+  "dependencies": { "dual-licensed-pkg": "^1.0.0" }
+}

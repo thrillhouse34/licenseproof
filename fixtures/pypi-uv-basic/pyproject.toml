@@ -1,0 +1,12 @@
+[project]
+name = "webwidget"
+version = "0.1.0"
+dependencies = [
+    "click",
+    "jinja2",
+]
+
+[dependency-groups]
+dev = [
+    "sphinx",
+]

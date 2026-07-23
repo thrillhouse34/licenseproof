@@ -1,0 +1,21 @@
+# Fixture for the mixed-case hash-fallback trigger (review of commit 0749bd4, M4
+# pre-work P3 fix-up). Real pnpm 9.15.9 hashes a snapshot key's .pnpm store
+# directory name whenever the encoded filename differs from its own lowercased
+# form (and doesn't start with "file+"), independent of the 120-char length
+# trigger. "some-pkg@1.0.0-RC.1" below has uppercase letters in its prerelease
+# version tag and is nowhere near the length trigger, isolating the mixed-case
+# trigger specifically. Not a real npm-registry package — this fixture only needs
+# a syntactically valid snapshot key with uppercase characters, not a real
+# `pnpm install` diff (unlike the peer-suffix fixture, which does reflect one).
+lockfileVersion: '9.0'
+importers:
+  .:
+    dependencies:
+      some-pkg:
+        specifier: ^1.0.0-RC.1
+        version: 1.0.0-RC.1
+packages:
+  some-pkg@1.0.0-RC.1:
+    resolution: {integrity: sha512-fake-mixed-case-fixture}
+snapshots:
+  some-pkg@1.0.0-RC.1: {}

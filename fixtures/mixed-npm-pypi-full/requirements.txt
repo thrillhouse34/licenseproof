@@ -1,0 +1,13 @@
+# Mixed-ecosystem fixture (richer than fixtures/mixed-npm-pypi): a Python
+# surface (requirements.txt, pinned) living side by side with a fully populated
+# npm surface (package.json + package-lock.json + real node_modules dirs) AND a
+# real .venv site-packages layout with real dist-info METADATA — so BOTH sides
+# resolve real licenses end-to-end (npm via package-lock.json's "license"
+# field, pypi via METADATA's License-Expression/License/Classifier fields),
+# rather than falling through to UNKNOWN for lack of an environment. This is
+# the Task 8 fixture proving the Task 7 merge logic end-to-end on a genuinely
+# realistic mixed project, superseding fixtures/mixed-npm-pypi's lean 4-file
+# merge-proof (which deliberately omits node_modules/.venv).
+requests==2.31.0
+click==8.1.7
+idna==3.6

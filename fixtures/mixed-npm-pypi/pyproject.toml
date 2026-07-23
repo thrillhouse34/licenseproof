@@ -1,0 +1,11 @@
+# Present so the pypi surface declares its OWN project license (Apache-2.0),
+# which deliberately DIFFERS from package.json's MIT — exercising Task 7's
+# mixed-repo project-license tie-break (npm-declared wins, with a non-silent
+# warning). requirements.txt still wins for the pypi PACKAGE list (precedence:
+# requirements.txt > pyproject-declared); pyproject.toml is only consulted here
+# for the project's own declared license.
+[project]
+name = "mixed-app"
+version = "1.0.0"
+license = { text = "Apache-2.0" }
+dependencies = ["requests>=2.31.0", "click>=8.1.0"]

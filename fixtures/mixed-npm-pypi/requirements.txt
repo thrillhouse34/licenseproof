@@ -1,0 +1,7 @@
+# Mixed-ecosystem fixture: a Python surface (requirements.txt, pinned) living
+# side by side with the npm surface (package.json + package-lock.json). No .venv,
+# so pypi diskPath is undefined and these resolve to UNKNOWN — the point of this
+# fixture is the multi-ecosystem MERGE (both surfaces detected, scanned, combined
+# with per-ecosystem counts), not pypi license resolution.
+requests==2.31.0
+click==8.1.7

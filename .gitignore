@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# Fixture directories intentionally contain a real (fake-content) node_modules/
+# tree to exercise disk-based presence checks in src/ecosystems/npm.ts — do not
+# let the blanket node_modules/ rule above swallow them.
+!fixtures/**/node_modules/
+!fixtures/**/node_modules/**

@@ -1,0 +1,5 @@
+{
+  "name": "fixture-resolve-07-agpl-project",
+  "version": "1.0.0",
+  "dependencies": { "agpl-pkg": "^1.0.0" }
+}

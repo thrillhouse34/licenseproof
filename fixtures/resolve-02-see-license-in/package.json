@@ -1,0 +1,5 @@
+{
+  "name": "fixture-resolve-02-see-license-in",
+  "version": "1.0.0",
+  "dependencies": { "custom-license-pkg": "^1.0.0" }
+}

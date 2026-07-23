@@ -1,0 +1,13 @@
+# Example pinned requirements for the licenseproof pypi-pinned-requirements fixture.
+--index-url https://pypi.org/simple
+-r other-requirements.txt
+
+requests==2.31.0
+typing-extensions==4.9.0  # normalization: on-disk dir uses an underscore
+click==8.1.7 ; python_version >= "3.8"
+not-installed-pkg==1.0.0
+
+# The lines below are intentionally NOT clean name==version pins:
+some-range>=2.0
+git+https://github.com/psf/requests.git#egg=requests
+./local/path/to/package

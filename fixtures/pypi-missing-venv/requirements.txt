@@ -1,0 +1,5 @@
+# A pinned requirements.txt with NO .venv / venv directory anywhere — exercises
+# graceful diskPath-undefined degradation (the pypi equivalent of npm's
+# missing-node_modules case).
+flask==3.0.0
+jinja2==3.1.2

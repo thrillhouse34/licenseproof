@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LicenseProof report — acme-video-tool</title>
+<style>
+:root {
+  --ink: #1a1a2e;          /* near-black slate, never pure #000 */
+  --muted: #5b6472;        /* secondary text */
+  --accent: #1e3a8a;       /* the ONE accent — structure only */
+  --rule: #d7dbe3;         /* hairline borders */
+  --rule-soft: #eceef2;
+  --paper: #ffffff;
+  --panel: #f7f8fa;        /* faint neutral panel, not a colored wash */
+  --sev-conflict: #b91c1c;
+  --sev-review: #b45309;
+  --sev-agpl: #1e3a8a;     /* accent-adjacent by design — non-blocking */
+  --sev-unknown: #6b7280;
+  --sev-clean: #4b7a53;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; font-size: 0.92em; }
+.page { max-width: 900px; margin: 0 auto; padding: 56px 40px 72px; }
+a { color: var(--accent); }
+
+/* ---- Cover header ---- */
+.cover { border-bottom: 3px solid var(--accent); padding-bottom: 28px; margin-bottom: 40px; }
+.cover__kicker { font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin: 0 0 10px; }
+.cover h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 6px; font-weight: 700; }
+.cover h1 .project { color: var(--accent); }
+.cover__facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 4px 28px; margin: 22px 0 20px; }
+/* Every cover label is short enough to sit on one line in a ~195px A4 grid
+   column — the old combined conflict/review/unknown label was the one
+   exception and is now three separate one-word facts. Flex column +
+   space-between additionally pins each value to the BOTTOM of its cell, so if a
+   label ever does wrap (a narrow viewport, a longer project field), the values
+   across a row still align instead of one dropping a line below its neighbours. */
+.cover__facts .fact { display: flex; flex-direction: column; justify-content: space-between; padding: 6px 0; border-top: 1px solid var(--rule-soft); }
+.cover__facts dt { font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.cover__facts dd { margin: 2px 0 0; font-weight: 600; }
+/* The ISO scan timestamp is one indivisible token, but a browser will happily
+   break it after a hyphen (2026-07- / 22T05:10:39.276Z). Hold it on one line and
+   size it to fit the narrowest A4 grid column. */
+.cover__facts dd.ts { white-space: nowrap; font-size: 0.88rem; }
+.verdict { font-size: 1.06rem; font-weight: 600; margin: 18px 0 0; padding: 12px 16px; border-left: 4px solid var(--accent); background: var(--panel); }
+.scope-note { font-size: 0.85rem; color: var(--muted); margin: 16px 0 0; }
+
+/* ---- Sections ---- */
+.section { margin: 48px 0; }
+.section > h2 { font-size: 1.35rem; margin: 0 0 4px; padding-bottom: 8px; border-bottom: 1px solid var(--rule); font-weight: 700; }
+.section__lead { color: var(--muted); margin: 8px 0 20px; }
+h3 { font-size: 1.08rem; margin: 30px 0 12px; }
+h4 { font-size: 0.98rem; margin: 22px 0 8px; color: var(--accent); }
+p { margin: 0 0 14px; }
+.empty { color: var(--muted); font-style: italic; padding: 16px; background: var(--panel); border-radius: 6px; }
+
+/* ---- Executive summary ---- */
+.exec p { max-width: 68ch; }
+
+/* ---- Severity chips (text label + plain CSS square, never an emoji) ---- */
+.chip { display: inline-flex; align-items: center; gap: 7px; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 10px 3px 8px; border: 1px solid var(--rule); border-radius: 4px; white-space: nowrap; }
+.chip__dot { width: 10px; height: 10px; border-radius: 2px; background: var(--sev-unknown); flex: none; }
+/* The inventory-table chip only. Kept deliberately compact (small type, tight
+   padding, minimal letter-spacing, a smaller gap) so the fixed Status column can
+   be narrow enough to leave the Package/Version columns room to hold their
+   values without force-breaking a name mid-word. It is still a real CSS square
+   plus an uppercase text label, per the brief. */
+.chip--sm { font-size: 0.62rem; letter-spacing: 0.01em; gap: 4px; padding: 2px 5px; white-space: nowrap; }
+.chip--sm .chip__dot { width: 7px; height: 7px; }
+.chip--conflict { color: var(--sev-conflict); border-color: var(--sev-conflict); }
+.chip--conflict .chip__dot { background: var(--sev-conflict); }
+.chip--review { color: var(--sev-review); border-color: var(--sev-review); }
+.chip--review .chip__dot { background: var(--sev-review); }
+.chip--agpl-informational { color: var(--sev-agpl); border-color: var(--sev-agpl); }
+.chip--agpl-informational .chip__dot { background: var(--sev-agpl); }
+.chip--unknown { color: var(--sev-unknown); border-color: var(--sev-unknown); }
+.chip--unknown .chip__dot { background: var(--sev-unknown); }
+.chip--clean { color: var(--sev-clean); border-color: var(--rule); }
+.chip--clean .chip__dot { background: var(--sev-clean); }
+
+.tag { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border: 1px solid var(--rule); border-radius: 4px; color: var(--muted); }
+.tag--muted { border-color: var(--rule-soft); }
+
+/* ---- Findings ---- */
+.finding-group { display: flex; align-items: baseline; gap: 8px; margin-top: 34px; }
+.finding-group .count { color: var(--muted); font-weight: 400; font-size: 0.95rem; }
+.finding { border: 1px solid var(--rule); border-radius: 8px; padding: 18px 20px; margin: 14px 0; page-break-inside: avoid; break-inside: avoid; }
+.finding[data-severity="conflict"] { border-left: 4px solid var(--sev-conflict); }
+.finding[data-severity="agpl-informational"] { border-left: 4px solid var(--sev-agpl); }
+.finding[data-severity="review"] { border-left: 4px solid var(--sev-review); }
+.finding[data-severity="unknown"] { border-left: 4px solid var(--sev-unknown); }
+.finding__head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
+.finding__name { font-size: 1.02rem; font-weight: 700; }
+.finding__meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 2px 24px; margin: 0 0 12px; }
+.meta-row { display: flex; gap: 10px; padding: 5px 0; border-top: 1px solid var(--rule-soft); min-width: 0; }
+.meta-row dt { flex: none; width: 92px; color: var(--muted); font-size: 0.85rem; }
+/* break-word, not "anywhere" — see the inventory-table note below. "anywhere"
+   split ordinary values mid-word (metadata -> meta/data, 5.3.0 -> 5.3./0). */
+.meta-row dd { margin: 0; min-width: 0; overflow-wrap: break-word; }
+.finding__explain { margin: 4px 0 0; max-width: 74ch; }
+
+/* ---- Inventory table ---- */
+details.inventory-details { border: 1px solid var(--rule); border-radius: 8px; padding: 4px 18px; margin-top: 8px; }
+details.inventory-details > summary { cursor: pointer; font-weight: 600; padding: 12px 4px; list-style-position: inside; }
+details.methodology { border: 1px solid var(--rule); border-radius: 8px; padding: 4px 20px; margin-top: 8px; }
+details.methodology > summary { cursor: pointer; font-weight: 600; padding: 12px 4px; list-style-position: inside; }
+.table-scroll { overflow-x: auto; }
+/* table-layout: fixed + the colgroup percentages are load-bearing, not
+   cosmetic. Under AUTO layout an 8-column table sizes itself from each column's
+   intrinsic min-content width, and break-word is (per spec)
+   NOT considered when computing min-content — so one long package name forced
+   the whole table wider than the printed page and silently clipped the Status
+   column off the right edge of the PDF. Under FIXED layout the widths below are
+   authoritative, the table is always exactly as wide as its container, and
+   break-word then breaks only the rare value that genuinely cannot fit. */
+table.inventory { table-layout: fixed; border-collapse: collapse; width: 100%; font-size: 0.72rem; margin: 8px 0 16px; }
+table.inventory th, table.inventory td { text-align: left; padding: 7px 5px; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+/* Headers are short fixed labels (Package, Version, …) and must NEVER wrap:
+   overflow-wrap "anywhere" used to break them mid-word as PACKAG/E, VERS/ION.
+   Their type is sized so every label fits its column on one line even in the
+   narrow A4 print column. */
+table.inventory th { white-space: nowrap; }
+/* break-word, never "anywhere": "anywhere" breaks inside a word even when the
+   word would fit on its own line, which split version numbers (5.3./0) and SPDX
+   ids (GPL-3.0-/or-later) mid-token. break-word only breaks a word that
+   genuinely cannot fit in its column at all. */
+table.inventory td { overflow-wrap: break-word; }
+/* Fixed-vocabulary columns hold a CLOSED set of short single-word tokens —
+   Ecosystem (npm/pypi), Confidence (high/medium/low), Source
+   (metadata/expression/classifier/license-file/readme/none). Their colgroup
+   widths above are sized to fit the longest token, so these values must never
+   wrap: break-word alone still split them mid-character in the printed PDF at
+   the narrow A4 column (metadata -> metada/ta, classifier -> classif/ier),
+   which reads as unfinished. nth-child indexes match the colgroup order
+   (3=Ecosystem, 6=Confidence, 7=Source). Category (col 5) is DELIBERATELY
+   excluded — its rendered labels are multi-word ("strong copyleft",
+   "noncommercial / commercial-restricted") and wrap cleanly at spaces, so
+   nowrap there would overflow the cell. Status (col 8) is a chip that already
+   carries its own white-space: nowrap. Package/Version/License stay break-word:
+   real scoped names and full SPDX OR/WITH expressions can genuinely be too long
+   for their column and must be allowed to wrap. */
+table.inventory td:nth-child(3),
+table.inventory td:nth-child(6),
+table.inventory td:nth-child(7) { white-space: nowrap; }
+table.inventory thead th { border-bottom: 2px solid var(--rule); color: var(--muted); font-size: 0.6rem; letter-spacing: 0.02em; text-transform: uppercase; }
+table.inventory tbody tr:last-child td { border-bottom: none; }
+
+/* ---- Warnings ---- */
+.warnings { margin: 0; padding-left: 20px; color: var(--muted); }
+.warnings li { margin: 6px 0; }
+
+/* ---- Provenance footer ---- */
+.provenance { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 0.82rem; }
+.provenance .mono { color: var(--ink); }
+
+ol, ul { max-width: 74ch; }
+li { margin: 5px 0; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88em; background: var(--panel); padding: 1px 5px; border-radius: 3px; }
+
+/* ---- Print ---- */
+@media print {
+  /* No @page { size } — the same file must print correctly on A4 AND Letter.
+     A ~170mm content column fits inside both page widths with margins. */
+  @page { margin: 16mm; }
+  body { font-size: 11pt; }
+  .page { max-width: 170mm; padding: 0; margin: 0; }
+  a { color: var(--ink); text-decoration: none; }
+  .verdict, .empty, code { background: transparent !important; }
+  .verdict { border-left-color: var(--ink); }
+  /* Force every collapsible open when printing, even if a screen viewer
+     collapsed it — reveal the non-summary children a closed details hides. */
+  details:not([open]) > *:not(summary) { display: revert !important; }
+  details > summary { list-style: none; }
+  details.inventory-details, details.methodology { border-color: var(--rule); }
+  .finding, table.inventory tr, .cover { page-break-inside: avoid; break-inside: avoid; }
+  .section { page-break-inside: auto; }
+  h2, h3, h4 { page-break-after: avoid; }
+}
+</style>
+</head>
+<body>
+  <main class="page">
+
+    <!-- (1) Cover header -->
+    <header class="cover">
+      <p class="cover__kicker">LicenseProof · Dependency license report</p>
+      <h1>License report for <span class="project">acme-video-tool</span></h1>
+      <dl class="cover__facts">
+        <div class="fact"><dt>Project license</dt><dd class="mono">UNLICENSED</dd></div>
+        <div class="fact"><dt>Scan date</dt><dd class="ts">2026-07-22T07:37:02.784Z</dd></div>
+        <div class="fact"><dt>Packages</dt><dd>1 (npm: 1)</dd></div>
+        <div class="fact"><dt>Conflicts</dt><dd>1</dd></div>
+        <div class="fact"><dt>Review</dt><dd>0</dd></div>
+        <div class="fact"><dt>Unknown</dt><dd>0</dd></div>
+        <div class="fact"><dt>Tool version</dt><dd class="mono">0.2.0</dd></div>
+        <div class="fact"><dt>Data version</dt><dd class="mono">2026.07.21.2</dd></div>
+      </dl>
+      <p class="verdict">1 license conflict requires attention before distribution.</p>
+      <p class="scope-note">Informational license categorization — not legal advice.</p>
+    </header>
+
+    <!-- (2) Executive summary -->
+    <section class="section exec" aria-labelledby="exec-h">
+      <h2 id="exec-h">Executive summary</h2>
+        <p>This report covers 1 package resolved from the npm dependency tree of acme-video-tool, whose declared project license is UNLICENSED.</p>
+        <p>1 package was flagged as a license conflict against the project license. The remaining 0 raised no flags.</p>
+        <p>The most restrictive license category present is strong copyleft.</p>
+    </section>
+
+    <!-- (3) Findings, severity-ordered: conflict → AGPL-informational → review → unknown -->
+    <section class="section" aria-labelledby="findings-h">
+      <h2 id="findings-h">Findings</h2>
+      <p class="section__lead">Packages that raised a flag against the project license, most restrictive first. Clean packages are listed in the full inventory below.</p>
+      <h3 class="finding-group">Conflict <span class="count">(1)</span></h3>
+      <article class="finding" data-severity="conflict">
+        <div class="finding__head">
+          <span class="chip chip--conflict"><span class="chip__dot"></span>Conflict</span>
+          <span class="finding__name mono">ffmpeg-static&#64;5.3.0</span>
+          <span class="tag">npm</span>
+          <span class="tag tag--muted">direct · production dependency</span>
+        </div>
+        <dl class="finding__meta">
+          <div class="meta-row"><dt>License</dt><dd><span class="mono">GPL-3.0-or-later</span></dd></div>
+          <div class="meta-row"><dt>Category</dt><dd>strong copyleft</dd></div>
+          <div class="meta-row"><dt>Confidence</dt><dd>high</dd></div>
+          <div class="meta-row"><dt>Source</dt><dd>metadata</dd></div>
+          <div class="meta-row"><dt>Dependency</dt><dd>via ffmpeg-static</dd></div>
+        </dl>
+        <p class="finding__explain">This package is under a strong-copyleft license (e.g. GPL/AGPL). Distributing it as part of a closed-source product can require releasing your own source code under the same terms. Flagged as CONFLICT for a proprietary project.</p>
+      </article>
+    </section>
+
+
+
+    <!-- (4) Full inventory -->
+    <section class="section" aria-labelledby="inventory-h">
+      <h2 id="inventory-h">Full inventory</h2>
+      <p class="section__lead">Every scanned package, ordered by status then name. Matches the JSON report ordering.</p>
+      <details class="inventory-details" open>
+        <summary>All 1 package</summary>
+        <div class="table-scroll">
+        <table class="inventory">
+          <colgroup>
+            <col style="width:14%"><col style="width:11%"><col style="width:12%"><col style="width:11%">
+            <col style="width:13%"><col style="width:12%"><col style="width:12%"><col style="width:15%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Package</th><th>Version</th><th>Ecosystem</th><th>License</th>
+              <th>Category</th><th>Confidence</th><th>Source</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">ffmpeg-static</td>
+              <td class="mono">5.3.0</td>
+              <td>npm</td>
+              <td class="mono">GPL-3.0-or-later</td>
+              <td>strong copyleft</td>
+              <td>high</td>
+              <td>metadata</td>
+              <td><span class="chip chip--conflict chip--sm"><span class="chip__dot"></span>Conflict</span></td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </details>
+    </section>
+
+    <!-- (5) Methodology appendix -->
+    <section class="section" aria-labelledby="method-h">
+      <h2 id="method-h">Methodology &amp; limitations</h2>
+      <details class="methodology" open>
+        <summary>How licenses were resolved, what confidence means, and known limitations</summary>
+        <h3>How each package's license is resolved</h3>
+        <p>LicenseProof reads only files already present on disk from the scanned project and its installed dependencies. It never contacts a network, registry, or remote service. The two ecosystems use different resolution orders:</p>
+
+        <h4>npm packages</h4>
+        <p>The first step that yields a license wins (later steps are not consulted):</p>
+        <ol>
+          <li><strong>Declared metadata</strong> — the <code>license</code> field in the package's <code>package.json</code>, parsed as an SPDX id or expression (OR / AND / WITH preserved). Confidence: high. npm's <code>UNLICENSED</code> convention is not treated as an SPDX id and falls through.</li>
+          <li><strong>License file</strong> — the text of an on-disk <code>LICENSE</code>/<code>COPYING</code> file, matched by fingerprint against known license texts. Confidence: medium for a close match, low for a modified or partial match.</li>
+          <li><strong>README mention</strong> — a <code>License:</code> line near the top of the README. Confidence: low.</li>
+          <li><strong>Unknown</strong> — no signal resolved; the package is reported as <code>UNKNOWN</code> and flagged for review. Unknown does not mean safe.</li>
+        </ol>
+
+        <h4>PyPI packages</h4>
+        <p>The metadata signals are read together so a disagreement between them can be surfaced; the on-disk steps run only when no metadata signal resolved:</p>
+        <ol>
+          <li><strong>License-Expression</strong> — the PEP 639 <code>License-Expression</code> metadata field. Confidence: high.</li>
+          <li><strong>License</strong> — the legacy <code>License</code> metadata field, used when no <code>License-Expression</code> is present. Confidence: high.</li>
+          <li><strong>Trove classifiers</strong> — the <code>License ::</code> classifiers, mapped to a representative SPDX id. Confidence: medium (classifiers are coarser than an explicit id — e.g. "BSD License" cannot distinguish BSD-2 from BSD-3).</li>
+          <li><strong>License file</strong> — on-disk license text, fingerprint-matched. Confidence: medium / low, as for npm.</li>
+          <li><strong>README mention</strong> — a <code>License:</code> line. Confidence: low.</li>
+          <li><strong>Unknown</strong> — reported as <code>UNKNOWN</code>, flagged for review.</li>
+        </ol>
+        <p>When a PyPI package's declared license field and its Trove classifiers resolve to different licenses (and not merely to different variants of the same license family), the package is additionally flagged for review as an internal metadata inconsistency.</p>
+
+        <h3>What the confidence levels mean</h3>
+        <ul>
+          <li><strong>high</strong> — the license came from an explicit, declared SPDX id or expression in package or project metadata.</li>
+          <li><strong>medium</strong> — the license was inferred from a close license-file text match or from a coarse Trove classifier.</li>
+          <li><strong>low</strong> — the license came from a modified/partial license-file match, a README mention, or could not be determined at all (Unknown).</li>
+        </ul>
+
+        <h3>Limitations</h3>
+        <ul>
+          <li>The category assigned to each license is an informational classification, not a legal determination of your obligations.</li>
+          <li>Only declared and detectable license signals are used. No manual legal review is performed, and no upstream registry is consulted (the tool runs fully offline).</li>
+          <li>Dependency paths are enumerated up to a cap; a "+at least N other paths" note is a floor, not an exact total.</li>
+          <li>A package's resolved license reflects the metadata and files present on disk at scan time; it is not verified against any external source of truth.</li>
+          <li>Unknown does not mean safe — it means the license could not be identified confidently and needs a human to look.</li>
+        </ul>
+
+        <h3>Not legal advice</h3>
+        <p>This report is an informational license categorization produced by automated analysis of declared package metadata and license files. It is not legal advice and is not a substitute for review by qualified counsel.</p>
+      </details>
+    </section>
+
+    <!-- (6) Provenance footer (static — per-page numbering is the PDF's job) -->
+    <footer class="provenance">
+      <p class="mono">LicenseProof 0.2.0 · reference data 2026.07.21.2 (SPDX license list e4c1f27) · scanned 2026-07-22T07:37:02.784Z</p>
+      <p>This report is an informational license categorization produced by automated analysis of declared package metadata and license files. It is not legal advice and is not a substitute for review by qualified counsel.</p>
+    </footer>
+
+  </main>
+</body>
+</html>

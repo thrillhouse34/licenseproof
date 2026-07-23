@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "_disclaimer": "Fixed, reviewed explanation strings. Never generated text. Not legal advice.",
+  "explanations": {
+    "strong-copyleft-in-proprietary": "This package is under a strong-copyleft license (e.g. GPL/AGPL). Distributing it as part of a closed-source product can require releasing your own source code under the same terms. Flagged as CONFLICT for a proprietary project.",
+    "agpl-networked-use": "This package is AGPL-licensed. AGPL's copyleft obligations extend to software offered over a network, not just distributed binaries — a stricter trigger than GPL. Flagged prominently regardless of project license.",
+    "weak-copyleft-review": "This package is under a weak-copyleft license (e.g. LGPL/MPL). Obligations typically depend on whether you modify the package or merely link/import it dynamically. Flagged for REVIEW, not automatic CONFLICT.",
+    "noncommercial-conflict": "This package's license restricts commercial use or requires special commercial terms (e.g. BUSL, SSPL, CC-BY-NC). Flagged as CONFLICT for any commercial project.",
+    "unknown-review": "LicenseProof could not confidently identify this package's license. Unknown does not mean safe — flagged for manual REVIEW.",
+    "copyleft-in-permissive-project": "This package is under a strong-copyleft license. Even though your project is permissively licensed, copyleft obligations can extend to how you distribute this specific dependency. Flagged for REVIEW.",
+    "gpl-apache-incompatibility": "Apache-2.0 is known to be incompatible with GPL-2.0-only (patent clause conflicts). Flagged for REVIEW when a GPL-2.0-only project depends on an Apache-2.0 package.",
+    "pypi-metadata-classifier-disagreement": "This PyPI package's declared license metadata disagrees with its Trove license classifiers - they resolve to different SPDX licenses. LicenseProof used the more specific metadata field (License-Expression or License) as the reported license, but the mismatch means the package's own metadata is internally inconsistent. Flagged for manual REVIEW to confirm the actual license."
+  }
+}

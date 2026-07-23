@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "_disclaimer": "Informational categorization to drive report grouping and conflict heuristics. Not legal advice.",
+  "_comment_m4": "Block below added in Milestone 4 (2026-07-21) to cover PyPI Trove 'License :: OSI Approved :: *' classifiers mapped in data/classifier-to-spdx.json. These SPDX ids were already vendored in spdx-licenses.json but had no category entry yet.",
+  "categories": {
+    "MIT": "permissive", "ISC": "permissive", "BSD-2-Clause": "permissive", "BSD-3-Clause": "permissive",
+    "Apache-2.0": "permissive", "0BSD": "permissive", "Zlib": "permissive",
+    "Unlicense": "public-domain", "CC0-1.0": "public-domain", "WTFPL": "public-domain",
+    "LGPL-2.1-only": "weak-copyleft", "LGPL-2.1-or-later": "weak-copyleft",
+    "LGPL-3.0-only": "weak-copyleft", "LGPL-3.0-or-later": "weak-copyleft",
+    "MPL-2.0": "weak-copyleft", "EPL-2.0": "weak-copyleft", "CDDL-1.0": "weak-copyleft",
+    "GPL-2.0-only": "strong-copyleft", "GPL-2.0-or-later": "strong-copyleft",
+    "GPL-3.0-only": "strong-copyleft", "GPL-3.0-or-later": "strong-copyleft",
+    "AGPL-3.0-only": "strong-copyleft", "AGPL-3.0-or-later": "strong-copyleft",
+    "BUSL-1.1": "noncommercial", "SSPL-1.0": "noncommercial", "Elastic-2.0": "noncommercial",
+    "CC-BY-NC-4.0": "noncommercial", "CC-BY-NC-SA-4.0": "noncommercial", "Prosperity-3.0.0": "noncommercial",
+
+    "AAL": "permissive", "AFL-3.0": "permissive", "Artistic-2.0": "permissive", "BSL-1.0": "permissive",
+    "CNRI-Python": "permissive", "EFL-2.0": "permissive", "HPND": "permissive", "Intel": "permissive",
+    "MIT-0": "permissive", "MirOS": "permissive", "NCSA": "permissive",
+    "OFL-1.1": "permissive", "OGTSL": "permissive", "PSF-2.0": "permissive",
+    "PostgreSQL": "permissive", "UPL-1.0": "permissive", "VSL-1.0": "permissive", "W3C": "permissive",
+    "Xnet": "permissive", "ZPL-2.1": "permissive",
+
+    "APSL-2.0": "weak-copyleft", "CPL-1.0": "weak-copyleft", "EPL-1.0": "weak-copyleft",
+    "IPL-1.0": "weak-copyleft", "LGPL-2.0-only": "weak-copyleft", "LGPL-2.0-or-later": "weak-copyleft",
+    "MPL-1.0": "weak-copyleft", "MPL-1.1": "weak-copyleft", "Nokia": "weak-copyleft",
+    "QPL-1.0": "weak-copyleft", "RSCPL": "weak-copyleft", "SISSL": "weak-copyleft", "SPL-1.0": "weak-copyleft",
+    "Motosoto": "weak-copyleft",
+
+    "CECILL-2.1": "strong-copyleft", "GFDL-1.3-only": "strong-copyleft", "OSL-3.0": "strong-copyleft",
+    "Sleepycat": "strong-copyleft",
+    "EUPL-1.0": "strong-copyleft", "EUPL-1.1": "strong-copyleft", "EUPL-1.2": "strong-copyleft",
+    "NGPL": "strong-copyleft"
+  },
+  "_comment_domain_review": "2026-07-21 domain-accuracy correction (Task 2 review): EUPL-1.0/1.1/1.2 moved from weak-copyleft to strong-copyleft - the EUPL's Art. 5 copyleft clause is whole-work reciprocal (closer to GPL than to MPL's file-level scope), and EUPL-1.2 extends the reciprocity trigger to network 'Communication' (AGPL-like); the FSF treats it as GPL-comparable, not weak/file-level. NGPL moved from permissive to strong-copyleft - despite the permissive-sounding name, its actual text carries a GPL-style whole-work reciprocity clause requiring derivatives to also be NGPL-licensed. Motosoto moved from permissive to weak-copyleft as a deliberate conservative call, not a high-confidence one: Motosoto derives from the Jabber Open Source License (MPL/Netscape-lineage), which carries file-level reciprocity on modifications, so 'permissive' risked a silent NONE result; this follows the same safe-direction pattern already applied to QPL-1.0 (weak-copyleft over permissive, to over-flag to REVIEW rather than risk missing a real conflict). Motosoto is an extremely rare license in practice, so real-world stakes here are low."
+}

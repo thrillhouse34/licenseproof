@@ -1,0 +1,5 @@
+{
+  "name": "fixture-resolve-06-scoped-private",
+  "version": "1.0.0",
+  "dependencies": { "@myorg/private-pkg": "^1.0.0" }
+}
