@@ -13,15 +13,18 @@ const REAL_KEY =
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const KEYGEN_MJS = path.resolve(REPO_ROOT, 'scripts', 'keygen', 'lib', 'keyFormat.mjs');
 const PRIVATE_KEY_PATH = path.resolve(REPO_ROOT, '..', 'licenseproof-signing-key', 'signing-key');
-const HAS_PRIVATE_KEY = fs.existsSync(PRIVATE_KEY_PATH);
+// Forging needs BOTH halves of the signing side: the private key AND the
+// keygen wire-format module. The public mirror intentionally ships no
+// scripts/keygen/, so there the forge path can't run and its tests skip.
+const CAN_FORGE = fs.existsSync(PRIVATE_KEY_PATH) && fs.existsSync(KEYGEN_MJS);
 
 /**
  * Forge a key signed by the REAL private key, using the .mjs signing side's
  * `buildPayloadBytes` product override (the exact hook M6 Task 1 built for this
  * test). Runs in a child node process so the shipped TS test never has to import
  * the never-shipped ESM .mjs across the tsc boundary. Returns the `P.S` string.
- * Only callable when the private key is present (this machine); tests that use
- * it are skipped otherwise.
+ * Only callable when the private key AND scripts/keygen/ are both present
+ * (the private repo); tests that use it are skipped otherwise.
  */
 function forgeKey(product: string): string {
   const mjsUrl = pathToFileURL(KEYGEN_MJS).href;
@@ -101,8 +104,9 @@ describe('verifyLicenseKey — never throws, returns null on adversarial input',
 // The central security test: a key VALIDLY SIGNED by the real private key but
 // carrying a DIFFERENT product string must still be rejected (the
 // product-confusion guard). Constructed via the .mjs override hook + the real
-// private key; runs on any machine with the private key present (this one).
-describe.skipIf(!HAS_PRIVATE_KEY)('verifyLicenseKey — product-confusion guard (real signature)', () => {
+// private key; runs wherever both the private key and scripts/keygen/ are
+// present, and skips in the public mirror, which ships neither.
+describe.skipIf(!CAN_FORGE)('verifyLicenseKey — product-confusion guard (real signature)', () => {
   it('a validly-signed key for a DIFFERENT product is rejected', () => {
     const wrongProductKey = forgeKey('some-other-product');
     // Sanity: it really is signed by the real key — the SAME forge path with the
