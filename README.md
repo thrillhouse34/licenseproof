@@ -34,7 +34,7 @@ Project license: unspecified
   the strictest, proprietary-equivalent conflict rules.
   Pass --project-license <SPDX id> to override this assumption.
 3 packages scanned — 2 conflict, 0 agpl-noted, 0 review, 0 unknown
-licenseproof 0.3.1 · data 2026.07.21.2 · scanned 2026-07-22T08:37:20.388Z
+licenseproof 0.3.3 · data 2026.07.21.2 · scanned 2026-07-25T04:43:59.071Z
 
 By category:
   permissive: 1

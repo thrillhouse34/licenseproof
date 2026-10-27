@@ -31,7 +31,7 @@ import { findChromeExecutable } from '../../src/report/pdf';
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const NPM_FIXTURE = path.join(REPO_ROOT, 'fixtures', 'package-lock-v3-basic');
 const KEYGEN_MJS = path.resolve(REPO_ROOT, 'scripts', 'keygen', 'lib', 'keyFormat.mjs');
-const PRIVATE_KEY_PATH = path.resolve(REPO_ROOT, '..', 'licenseproof-private', 'signing-key');
+const PRIVATE_KEY_PATH = path.resolve(REPO_ROOT, '..', 'licenseproof-signing-key', 'signing-key');
 const HAS_PRIVATE_KEY = fs.existsSync(PRIVATE_KEY_PATH);
 
 // The gated artifact this journey generates. PDF is the brief's literal wording

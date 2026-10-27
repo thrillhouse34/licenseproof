@@ -36,8 +36,19 @@ npm pack --pack-destination /tmp
 TARBALL=$(ls -t /tmp/licenseproof-*.tgz | head -1)
 echo "==> Tarball: $TARBALL"
 
+# Captured ONCE into a variable and grepped via here-strings (<<<) everywhere
+# below, rather than repeatedly piping `tar -tzf "$TARBALL" | grep -q ...`.
+# That live-pipe form is a real, latent bug under `set -o pipefail`: `grep -q`
+# exits the instant it finds a match, closing its stdin; `tar`, still writing
+# to that now-closed pipe, dies from SIGPIPE; `pipefail` then reports the
+# WHOLE pipeline as failed even though grep found exactly what it was looking
+# for. It's a race (tar sometimes finishes first), so it doesn't always
+# reproduce. A here-string has no live producer process to receive a SIGPIPE
+# at all.
+TAR_LISTING=$(tar -tzf "$TARBALL")
+
 echo "==> Confirming data/ is present inside the tarball..."
-if ! tar -tzf "$TARBALL" | grep -q '^package/data/manifest\.json$'; then
+if ! grep -q '^package/data/manifest\.json$' <<<"$TAR_LISTING"; then
   echo "FAIL: data/manifest.json not found in tarball contents" >&2
   exit 1
 fi
@@ -64,22 +75,22 @@ if [ -z "$BIN_VALUE" ]; then
   exit 1
 fi
 echo "==> Packed bin.licenseproof = $BIN_VALUE"
-if ! tar -tzf "$TARBALL" | grep -qF "package/$BIN_VALUE"; then
+if ! grep -qF "package/$BIN_VALUE" <<<"$TAR_LISTING"; then
   echo "FAIL: packed bin.licenseproof points at '$BIN_VALUE', which is not a file in the tarball" >&2
   exit 1
 fi
 
 echo "==> Confirming the tarball ships nothing under scripts/keygen/..."
-if tar -tzf "$TARBALL" | grep -q '^package/scripts/keygen/'; then
+if grep -q '^package/scripts/keygen/' <<<"$TAR_LISTING"; then
   echo "FAIL: scripts/keygen/ found in the packed tarball" >&2
-  tar -tzf "$TARBALL" | grep '^package/scripts/keygen/' >&2
+  grep '^package/scripts/keygen/' <<<"$TAR_LISTING" >&2
   exit 1
 fi
 
 echo "==> Confirming the tarball ships nothing under scripts/ at all..."
-if tar -tzf "$TARBALL" | grep -q '^package/scripts/'; then
+if grep -q '^package/scripts/' <<<"$TAR_LISTING"; then
   echo "FAIL: scripts/ found in the packed tarball" >&2
-  tar -tzf "$TARBALL" | grep '^package/scripts/' >&2
+  grep '^package/scripts/' <<<"$TAR_LISTING" >&2
   exit 1
 fi
 
@@ -129,23 +140,36 @@ PEM_MARKER_PART2="KEY"
 PEM_BLOCK_REGEX="-----BEGIN ([A-Z0-9]+ )*${PEM_MARKER_PART1} ${PEM_MARKER_PART2}-----"
 GENERIC_MARKER="${PEM_MARKER_PART1} ${PEM_MARKER_PART2}"
 
-if grep -rlE -- "$PEM_BLOCK_REGEX" "$INSTALLED_PKG_DIR" 2>/dev/null | grep -q .; then
+PEM_BLOCK_HITS=$(grep -rlE -- "$PEM_BLOCK_REGEX" "$INSTALLED_PKG_DIR" 2>/dev/null || true)
+if [ -n "$PEM_BLOCK_HITS" ]; then
   echo "FAIL: PEM private-key block found in the installed package:" >&2
-  grep -rlE -- "$PEM_BLOCK_REGEX" "$INSTALLED_PKG_DIR" >&2
+  echo "$PEM_BLOCK_HITS" >&2
   exit 1
 fi
-if grep -rlF -- "$GENERIC_MARKER" "$INSTALLED_PKG_DIR" 2>/dev/null | grep -q .; then
+GENERIC_MARKER_HITS=$(grep -rlF -- "$GENERIC_MARKER" "$INSTALLED_PKG_DIR" 2>/dev/null || true)
+if [ -n "$GENERIC_MARKER_HITS" ]; then
   echo "FAIL: generic private-key marker found in the installed package:" >&2
-  grep -rlF -- "$GENERIC_MARKER" "$INSTALLED_PKG_DIR" >&2
+  echo "$GENERIC_MARKER_HITS" >&2
   exit 1
 fi
 
 echo "==> Confirming no internal planning docs shipped in the installed package..."
+# The trailing "-iname '*report.md'" is deliberately broad and
+# case-insensitive: it's meant to catch completion-report docs regardless of
+# naming convention, not just this repo's own 'milestone1_report.md' style.
+# Sibling repo ceproof-private (bootstrapped from this one) names its reports
+# 'M1-COMPLETION-REPORT.md' — uppercase, hyphenated, no underscore before
+# "REPORT" — which the old case-sensitive '*_report.md' glob would have
+# missed entirely. Any filename ending in "report.md", in any case or
+# separator style, is caught by this single suffix match. Checked against
+# `npm pack --dry-run --json`: the only *.md this package ships is README.md,
+# which does not end in "report.md", so this stays non-flagging for real
+# shipped docs.
 FORBIDDEN_DOCS=$(find "$INSTALLED_PKG_DIR" -type f \( \
   -name 'milestone*_brief.md' -o \
   -name 'licenseproof_v1_spec.md' -o \
   -name 'foundations_addendum.md' -o \
-  -name '*_report.md' \
+  -iname '*report.md' \
   \) 2>/dev/null || true)
 if [ -n "$FORBIDDEN_DOCS" ]; then
   echo "FAIL: internal planning docs found in the installed package:" >&2
@@ -168,13 +192,13 @@ echo "$JSON_OUTPUT"
 echo "(exit code: $JSON_EXIT)"
 
 echo "==> Checking for module-resolution errors..."
-if echo "$JSON_OUTPUT" | grep -qiE 'cannot find module|enoent'; then
+if grep -qiE 'cannot find module|enoent' <<<"$JSON_OUTPUT"; then
   echo "FAIL: output references a module-resolution error" >&2
   exit 1
 fi
 
 echo "==> Checking dataVersion is populated (proves data/ loaded from the packed location)..."
-if ! echo "$JSON_OUTPUT" | grep -q '"dataVersion": *"[0-9]'; then
+if ! grep -q '"dataVersion": *"[0-9]' <<<"$JSON_OUTPUT"; then
   echo "FAIL: dataVersion missing or not populated in JSON output" >&2
   exit 1
 fi
@@ -232,15 +256,15 @@ if [ "$PDF_EXIT" -ne 3 ]; then
   echo "FAIL: pdf (gated, no key) exited $PDF_EXIT, expected 3" >&2
   exit 1
 fi
-if ! echo "$PDF_STDOUT" | grep -q '\$29'; then
+if ! grep -q '\$29' <<<"$PDF_STDOUT"; then
   echo "FAIL: unlicensed refusal message is missing the individual price (\$29)" >&2
   exit 1
 fi
-if ! echo "$PDF_STDOUT" | grep -q '\$99'; then
+if ! grep -q '\$99' <<<"$PDF_STDOUT"; then
   echo "FAIL: unlicensed refusal message is missing the agency price (\$99)" >&2
   exit 1
 fi
-if ! echo "$PDF_STDOUT" | grep -q 'licenseproof\.dev'; then
+if ! grep -q 'licenseproof\.dev' <<<"$PDF_STDOUT"; then
   echo "FAIL: unlicensed refusal message is missing licenseproof.dev" >&2
   exit 1
 fi

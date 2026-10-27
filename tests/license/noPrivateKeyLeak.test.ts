@@ -6,12 +6,14 @@ import { REPO_ROOT } from '../../src/paths';
 
 // Security regression guard for Milestone 6's signing infrastructure.
 //
-// The real private signing key lives OUTSIDE this repo (../licenseproof-private/
-// signing-key), so it structurally cannot be committed. These tests are
-// defense-in-depth: they fail loudly if a private key ever ends up inside the
-// repo's COMMITTED content by accident (a mis-copied file, a paste into a doc),
-// AND if the never-shipped keygen tooling under scripts/keygen/ ever leaks into
-// the published npm package.
+// The real private signing key is managed entirely OUTSIDE this repo, in
+// separate out-of-band storage (its real location is deliberately not
+// recorded here — see scripts/keygen/generateSigningKey.mjs's header), so it
+// structurally cannot be committed. These tests are defense-in-depth: they
+// fail loudly if a private key ever ends up inside the repo's COMMITTED
+// content by accident (a mis-copied file, a paste into a doc), AND if the
+// never-shipped keygen tooling under scripts/keygen/ ever leaks into the
+// published npm package.
 //
 // Scope is git-tracked files only (via `git ls-files`), not a raw filesystem
 // walk. This answers the question that actually matters — "could a private key

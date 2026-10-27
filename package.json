@@ -1,7 +1,31 @@
 {
   "name": "licenseproof",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "description": "Know every license in your dependency tree — before your customer's lawyer asks.",
+  "keywords": [
+    "license",
+    "licenses",
+    "license-compliance",
+    "spdx",
+    "sbom",
+    "cyclonedx",
+    "dependencies",
+    "open-source-compliance",
+    "gpl",
+    "agpl",
+    "attribution",
+    "third-party-notices",
+    "audit",
+    "cli"
+  ],
+  "homepage": "https://licenseproof.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thrillhouse34/licenseproof.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thrillhouse34/licenseproof/issues"
+  },
   "license": "Elastic-2.0",
   "bin": {
     "licenseproof": "dist/cli/index.js"

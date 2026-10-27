@@ -17,7 +17,7 @@ const REAL_KEY =
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const KEYGEN_MJS = path.resolve(REPO_ROOT, 'scripts', 'keygen', 'lib', 'keyFormat.mjs');
-const PRIVATE_KEY_PATH = path.resolve(REPO_ROOT, '..', 'licenseproof-private', 'signing-key');
+const PRIVATE_KEY_PATH = path.resolve(REPO_ROOT, '..', 'licenseproof-signing-key', 'signing-key');
 const HAS_PRIVATE_KEY = fs.existsSync(PRIVATE_KEY_PATH);
 
 /** Forge a real-signed key with an arbitrary updatesUntil (for the currency-note test). */

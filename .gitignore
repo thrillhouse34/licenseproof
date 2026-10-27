@@ -3,6 +3,14 @@ dist/
 *.log
 .DS_Store
 
+# Defense-in-depth against ever committing signing-key material, even though
+# the real private key is managed entirely outside this repo. Belt and
+# braces: these patterns should always match nothing, but if a key file ever
+# ends up here by accident (a local keygen test run, a stray copy), this
+# stops it from being added silently.
+signing-key
+*.key
+
 # Fixture directories intentionally contain a real (fake-content) node_modules/
 # tree to exercise disk-based presence checks in src/ecosystems/npm.ts — do not
 # let the blanket node_modules/ rule above swallow them.
