@@ -34,7 +34,7 @@ Project license: unspecified
   the strictest, proprietary-equivalent conflict rules.
   Pass --project-license <SPDX id> to override this assumption.
 3 packages scanned — 2 conflict, 0 agpl-noted, 0 review, 0 unknown
-licenseproof 0.3.3 · data 2026.07.21.2 · scanned 2026-07-25T04:43:59.071Z
+licenseproof 0.3.5 · data 2026.07.21.2 · scanned 2026-07-25T04:43:59.071Z
 
 By category:
   permissive: 1
@@ -193,6 +193,55 @@ Every other format (`html`, `notices`, `sbom-cyclonedx`, `sbom-spdx`) has **no b
 of any kind** — the HTML report in particular is a single self-contained file with zero external
 references, and is the recommended output if you'd rather not install a browser.
 
+## Use it in CI
+
+### GitHub Actions
+
+The least work is the published action, which wraps this CLI:
+
+```yaml
+name: License check
+on: [push, pull_request]
+jobs:
+  licenseproof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - uses: thrillhouse34/licenseproof-action@v1
+        with:
+          fail-on: conflict          # conflict (default) | review | never
+          # license-key: ${{ secrets.LICENSEPROOF_LICENSE_KEY }}   # adds html,pdf,notices,sbom-cyclonedx,sbom-spdx
+      # Free CycloneDX SBOM without a key:
+      - run: npx --yes licenseproof@0.3.5 report --format sbom-cyclonedx --out sbom.cdx.json
+```
+
+### GitLab CI
+
+```yaml
+licenseproof:
+  image: node:22
+  stage: test
+  script:
+    - npm ci
+    - npx --yes licenseproof@0.3.5 scan --fail-on conflict
+    - npx --yes licenseproof@0.3.5 report --format sbom-cyclonedx --out sbom.cdx.json
+  artifacts:
+    paths: [sbom.cdx.json]
+# Paid: add a masked CI/CD variable LICENSEPROOF_KEY and use --format notices,html,pdf --out licenseproof-reports
+```
+
+**Python projects:** install the dependencies into `.venv` before scanning
+(`python -m venv .venv && .venv/bin/pip install -r requirements.txt`), so
+licenses resolve from the installed metadata on disk rather than from declared
+ranges alone.
+
+Any other CI runner works the same way: it is a plain `npx` call with no network
+access at scan time. Gate the build on `scan`'s exit code and keep the `report`
+output as an artifact.
+
 ## Pricing
 
 The `scan` command is **free forever** — both `--format summary` and `--format json`, completely
@@ -237,7 +286,7 @@ Current coverage, honestly:
 
 ## License
 
-licenseproof is source-available under the [Elastic License 2.0](LICENSE). It's free to use — including commercially, on your own projects and for your own clients — but you may not resell it as a hosted or managed service, and you may not remove, disable, or circumvent its license-key functionality.
+licenseproof is source-available under the [Elastic License 2.0](LICENSE) (SPDX: `Elastic-2.0`). It's free to use — including commercially, on your own projects and for your own clients — but you may not resell it as a hosted or managed service, and you may not remove, disable, or circumvent its license-key functionality.
 
 ## Development
 

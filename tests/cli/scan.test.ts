@@ -279,3 +279,52 @@ describe('runScan — NO_COLOR environment variable', () => {
     expect(result.output).toMatch(/\x1b\[/);
   });
 });
+
+// licenseproof has no --config flag; the path it takes explicitly is the
+// `[path]` argument. A path that isn't on disk at all used to come back as the
+// marker-listing "no supported project found at X (looked for package.json,
+// and pyproject.toml / ...)" — which sent people hunting for a missing
+// manifest in a directory that never existed. Same exit code (2), honest
+// message. The guard lives in buildReportData, so `report` gets it too.
+describe('runScan — a project path that does not exist', () => {
+  const os = require('os');
+  const fs = require('fs');
+
+  it('exits 2 with "path not found" naming the path, not the no-manifest message', async () => {
+    const missing = path.join(os.tmpdir(), 'licenseproof-no-such-dir-xyz');
+    const result = await runScan({ path: missing, productionOnly: true, format: 'summary', failOn: 'conflict', projectLicenseOverride: undefined });
+    expect(result.exitCode).toBe(2);
+    expect(result.output).toContain('path not found');
+    expect(result.output).toContain(missing);
+    expect(result.output).not.toContain('no supported project found');
+  });
+
+  it('keeps it to one line with no stack trace leaked', async () => {
+    const result = await runScan({ path: path.join(os.tmpdir(), 'licenseproof-no-such-dir-xyz'), productionOnly: true, format: 'summary', failOn: 'conflict', projectLicenseOverride: undefined });
+    expect(result.output).not.toContain('at Object.');
+    expect(result.output.split('\n').length).toBeLessThanOrEqual(2);
+  });
+
+  it('fails even with --fail-on never — this is a usage error, not a license verdict', async () => {
+    const result = await runScan({ path: path.join(os.tmpdir(), 'licenseproof-no-such-dir-xyz'), productionOnly: true, format: 'summary', failOn: 'never', projectLicenseOverride: undefined });
+    expect(result.exitCode).toBe(2);
+  });
+
+  it('a FILE passed where a directory is expected is also "path not found", not a crash', async () => {
+    const f = path.join(os.tmpdir(), 'licenseproof-not-a-dir.txt');
+    fs.writeFileSync(f, 'x');
+    try {
+      const result = await runScan({ path: f, productionOnly: true, format: 'summary', failOn: 'conflict', projectLicenseOverride: undefined });
+      expect(result.exitCode).toBe(2);
+      expect(result.output).toContain('path not found');
+    } finally {
+      fs.rmSync(f, { force: true });
+    }
+  });
+
+  it('an existing directory with no manifest still gets the no-project message', async () => {
+    const result = await runScan({ path: os.tmpdir(), productionOnly: true, format: 'summary', failOn: 'conflict', projectLicenseOverride: undefined });
+    expect(result.exitCode).toBe(2);
+    expect(result.output).toContain('no supported project found');
+  });
+});

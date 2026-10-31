@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import { npmEcosystem } from '../ecosystems/npm';
 import { pypiEcosystem } from '../ecosystems/pypi';
 import type { EcosystemId, ScanResult } from '../ecosystems/types';
@@ -81,6 +82,24 @@ export class NoProjectFoundError extends Error {
 }
 
 /**
+ * Thrown by `buildReportData` when the path the user explicitly named isn't a
+ * directory on disk at all.
+ *
+ * Kept distinct from NoProjectFoundError on purpose. Both exit 2, but they are
+ * different user mistakes with different fixes: "I'm in the wrong place / I
+ * typed the path wrong" versus "this really is my project and licenseproof
+ * can't see a manifest in it". Collapsing a typo'd path into the marker-listing
+ * "no supported project found" message sent people hunting for a missing
+ * package.json in a directory that was never there.
+ */
+export class PathNotFoundError extends Error {
+  constructor(path: string) {
+    super(`path not found: ${path}`);
+    this.name = 'PathNotFoundError';
+  }
+}
+
+/**
  * Merge the ScanResults of every ecosystem that detected into a single combined
  * view for the downstream resolution + reporting layers. A project can carry BOTH
  * an npm and a pypi surface side by side (a mixed repo), so this is a real merge,
@@ -153,6 +172,12 @@ function mergeScanResults(results: ScanResult[]): { merged: ScanResult; projectL
  * and turn it into their exit-2 "no project" message.
  */
 export async function buildReportData(path: string, opts: BuildReportDataOptions): Promise<ReportData> {
+  // Checked before either detector runs: a path that isn't there produces an
+  // honest "path not found", never the misleading marker-listing message below.
+  if (!fs.existsSync(path) || !fs.statSync(path).isDirectory()) {
+    throw new PathNotFoundError(path);
+  }
+
   // Detect BOTH ecosystems independently — they are not mutually exclusive; a
   // mixed repo can carry a package.json AND a pyproject.toml/requirements.txt.
   const npmDetected = npmEcosystem.detect(path);

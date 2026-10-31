@@ -18,7 +18,10 @@ const REAL_KEY =
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const KEYGEN_MJS = path.resolve(REPO_ROOT, 'scripts', 'keygen', 'lib', 'keyFormat.mjs');
 const PRIVATE_KEY_PATH = path.resolve(REPO_ROOT, '..', 'licenseproof-signing-key', 'signing-key');
-const HAS_PRIVATE_KEY = fs.existsSync(PRIVATE_KEY_PATH);
+// Forging needs BOTH halves of the signing side: the private key AND the
+// keygen wire-format module. The public mirror intentionally ships no
+// scripts/keygen/, so there the forge path can't run and its tests skip.
+const CAN_FORGE = fs.existsSync(PRIVATE_KEY_PATH) && fs.existsSync(KEYGEN_MJS);
 
 /** Forge a real-signed key with an arbitrary updatesUntil (for the currency-note test). */
 function forgeKeyWithUpdatesUntil(updatesUntil: string): string {
@@ -200,8 +203,9 @@ describe('runReport — gating (whole-request)', () => {
 });
 
 // The data-currency note only fires with a real-signed key whose updatesUntil is
-// in the past — forged via the .mjs override + the real private key.
-describe.skipIf(!HAS_PRIVATE_KEY)('runReport — data-currency note (real signed key, past updatesUntil)', () => {
+// in the past — forged via the .mjs override + the real private key. Skipped
+// where either half is absent (the public mirror ships no scripts/keygen/).
+describe.skipIf(!CAN_FORGE)('runReport — data-currency note (real signed key, past updatesUntil)', () => {
   let scratch: string;
   beforeEach(() => {
     scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'lp-curr-'));

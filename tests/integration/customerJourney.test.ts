@@ -32,7 +32,11 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const NPM_FIXTURE = path.join(REPO_ROOT, 'fixtures', 'package-lock-v3-basic');
 const KEYGEN_MJS = path.resolve(REPO_ROOT, 'scripts', 'keygen', 'lib', 'keyFormat.mjs');
 const PRIVATE_KEY_PATH = path.resolve(REPO_ROOT, '..', 'licenseproof-signing-key', 'signing-key');
-const HAS_PRIVATE_KEY = fs.existsSync(PRIVATE_KEY_PATH);
+// A fresh real issuance needs BOTH halves of the signing side: the private key
+// AND the keygen wire-format module. The public mirror intentionally ships no
+// scripts/keygen/, so there we fall back to the committed real-signed key and
+// the journey still runs end to end.
+const CAN_ISSUE = fs.existsSync(PRIVATE_KEY_PATH) && fs.existsSync(KEYGEN_MJS);
 
 // The gated artifact this journey generates. PDF is the brief's literal wording
 // ("generate PDF"), and it's what we exercise on any machine with a real browser
@@ -49,19 +53,20 @@ const GATED_FILENAME = GATED_FORMAT === 'pdf' ? 'report.pdf' : 'report.html';
 // present on this machine we ISSUE a fresh one for real via the keygen wire
 // format (`scripts/keygen/lib/keyFormat.mjs` — the same mechanism the keygen
 // tooling and reportGating's forge helper use). Otherwise we fall back to this
-// committed real-signed key so the journey still runs on a machine without the
-// private key — exactly the pattern reportGating.test.ts uses.
+// committed real-signed key so the journey still runs without the private key
+// or without scripts/keygen/ — exactly the pattern reportGating.test.ts uses.
 const FALLBACK_REAL_KEY =
   'eyJwcm9kdWN0IjoibGljZW5zZXByb29mIiwidGllciI6ImluZGl2aWR1YWwiLCJsaWNlbnNlSWQiOiJFOVlNM0FVTVdDIiwiaXNzdWVkQXQiOiIyMDI2LTA3LTIyVDIzOjI0OjM1LjY1MFoiLCJ1cGRhdGVzVW50aWwiOiIyMDI3LTA3LTIyVDIzOjI0OjM1LjY1MFoifQ.6dXrjjkhjtIvO3wdIjVqevO3NiJ6bKIK9exRmeMirkxPBaNYhc-pN9TQ4XStr1bKacTspX5VKU7btgNsC2tKDQ';
 
 /**
  * Step 1 of the journey — issue a real, verifying individual-tier license key.
- * Signs a fresh payload with the real private key when it's available (a genuine
- * issuance), else returns the committed real-signed key. Uses a future
+ * Signs a fresh payload with the real private key when it and the keygen module
+ * are both available (a genuine issuance), else returns the committed
+ * real-signed key. Uses a future
  * updatesUntil so the generated report carries no data-currency FYI line.
  */
 function issueRealKey(): string {
-  if (!HAS_PRIVATE_KEY) return FALLBACK_REAL_KEY;
+  if (!CAN_ISSUE) return FALLBACK_REAL_KEY;
   const mjsUrl = pathToFileURL(KEYGEN_MJS).href;
   const script = `
     import * as crypto from 'crypto';

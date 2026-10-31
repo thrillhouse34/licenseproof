@@ -1,7 +1,41 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NoProjectFoundError = void 0;
+exports.PathNotFoundError = exports.NoProjectFoundError = void 0;
 exports.buildReportData = buildReportData;
+const fs = __importStar(require("fs"));
 const npm_1 = require("../ecosystems/npm");
 const pypi_1 = require("../ecosystems/pypi");
 const resolveProject_1 = require("../resolve/resolveProject");
@@ -21,6 +55,24 @@ class NoProjectFoundError extends Error {
     }
 }
 exports.NoProjectFoundError = NoProjectFoundError;
+/**
+ * Thrown by `buildReportData` when the path the user explicitly named isn't a
+ * directory on disk at all.
+ *
+ * Kept distinct from NoProjectFoundError on purpose. Both exit 2, but they are
+ * different user mistakes with different fixes: "I'm in the wrong place / I
+ * typed the path wrong" versus "this really is my project and licenseproof
+ * can't see a manifest in it". Collapsing a typo'd path into the marker-listing
+ * "no supported project found" message sent people hunting for a missing
+ * package.json in a directory that was never there.
+ */
+class PathNotFoundError extends Error {
+    constructor(path) {
+        super(`path not found: ${path}`);
+        this.name = 'PathNotFoundError';
+    }
+}
+exports.PathNotFoundError = PathNotFoundError;
 /**
  * Merge the ScanResults of every ecosystem that detected into a single combined
  * view for the downstream resolution + reporting layers. A project can carry BOTH
@@ -89,6 +141,11 @@ function mergeScanResults(results) {
  * and turn it into their exit-2 "no project" message.
  */
 async function buildReportData(path, opts) {
+    // Checked before either detector runs: a path that isn't there produces an
+    // honest "path not found", never the misleading marker-listing message below.
+    if (!fs.existsSync(path) || !fs.statSync(path).isDirectory()) {
+        throw new PathNotFoundError(path);
+    }
     // Detect BOTH ecosystems independently — they are not mutually exclusive; a
     // mixed repo can carry a package.json AND a pyproject.toml/requirements.txt.
     const npmDetected = npm_1.npmEcosystem.detect(path);

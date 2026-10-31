@@ -146,3 +146,32 @@ describe('runReport — no project detected', () => {
     }
   });
 });
+
+// `report` routes through the same buildReportData guard `scan` does, so a
+// path that isn't on disk is an honest "path not found" here too — and, as
+// with every other report-side usage error, nothing is written.
+describe('runReport — a project path that does not exist', () => {
+  let scratch: string;
+
+  beforeEach(() => {
+    scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'licenseproof-report-nopath-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(scratch, { recursive: true, force: true });
+  });
+
+  it('exits 2 with "path not found", writes nothing, and does not say "no supported project found"', async () => {
+    const missing = path.join(os.tmpdir(), 'licenseproof-no-such-dir-xyz');
+    const out = path.join(scratch, 'sbom.cyclonedx.json');
+    const result = await runReport({
+      path: missing, productionOnly: true, formats: ['sbom-cyclonedx'], out,
+      projectLicenseOverride: undefined,
+    });
+    expect(result.exitCode).toBe(2);
+    expect(result.output).toContain('path not found');
+    expect(result.output).toContain(missing);
+    expect(result.output).not.toContain('no supported project found');
+    expect(fs.existsSync(out)).toBe(false);
+  });
+});

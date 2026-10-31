@@ -152,9 +152,49 @@ describe('renderSpdx — schema conformance + shape', () => {
     expect(doc.SPDXID).toBe('SPDXRef-DOCUMENT');
     expect(doc.name).toBe(data.projectName);
     expect(doc.documentNamespace).toContain('https://licenseproof.dev/spdxdocs/');
-    expect(doc.creationInfo.created).toBe(data.scanTimestamp);
+    expect(doc.creationInfo.created).toBe(data.scanTimestamp.replace(/\.\d+Z$/, 'Z'));
     expect(doc.creationInfo.creators).toEqual([`Tool: licenseproof-${data.toolVersion}`]);
     expect(doc.packages).toHaveLength(data.packages.length);
+  });
+
+  // Regression guard for the 0.3.4 bug: `creationInfo.created` carried the
+  // milliseconds from `new Date().toISOString()`, e.g.
+  // "2026-10-31T15:43:32.987Z". The vendored SPDX 2.3 JSON schema types that
+  // field as a plain string with no `pattern`, so schema validation above passed
+  // it happily — but SPDX 2.3 specifies the literal format
+  // `YYYY-MM-DDThh:mm:ssZ`, and the official validator (`pyspdxtools`, the
+  // spdx-tools Python package) parses it with exactly that and fails:
+  //   Error while parsing Document:
+  //   ["time data '2026-10-31T15:43:32.987Z' does not match format '%Y-%m-%dT%H:%M:%SZ'"]
+  // This asserts the same grammar pyspdxtools enforces, in-process, so the
+  // suite needs no Python, no venv and no network to catch a regression.
+  const SPDX_CREATED = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+
+  it('emits creationInfo.created in the exact SPDX 2.3 datetime format, with no fractional seconds', async () => {
+    const data = await reportData('mixed-npm-pypi-full', false);
+    // Prove the input really does have the milliseconds that used to leak through,
+    // so this test cannot pass vacuously if scanTimestamp ever loses them upstream.
+    expect(data.scanTimestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+
+    const doc = JSON.parse(renderSpdx(data));
+    expect(doc.creationInfo.created).toMatch(SPDX_CREATED);
+    // Same instant, just truncated — not a re-stamped or shifted time.
+    expect(Date.parse(doc.creationInfo.created)).toBe(
+      Math.floor(Date.parse(data.scanTimestamp) / 1000) * 1000,
+    );
+  });
+
+  it('strips any sub-second precision, not just a 3-digit millisecond field', async () => {
+    const data = await reportData('mixed-npm-pypi-full', false);
+    for (const stamp of [
+      '2026-10-31T15:43:32.987Z',
+      '2026-10-31T15:43:32.9Z',
+      '2026-10-31T15:43:32.987654Z',
+      '2026-10-31T15:43:32Z', // already clean — must pass through untouched
+    ]) {
+      const doc = JSON.parse(renderSpdx({ ...data, scanTimestamp: stamp }));
+      expect(doc.creationInfo.created).toBe('2026-10-31T15:43:32Z');
+    }
   });
 
   it('gives every package a UNIQUE SPDXID across a large real dependency tree', async () => {
